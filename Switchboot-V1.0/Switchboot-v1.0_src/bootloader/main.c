@@ -1225,7 +1225,7 @@ ment_t ment_top[] = {
 	MDEF_CAPTION("---------------------", 0xFF444444),
 	MDEF_HANDLER("About", about),
 	MDEF_CAPTION("---------------------", 0xFF444444),
-	MDEF_CHGLINE(),
+	/*MDEF_CHGLINE(),
 	MDEF_CAPTION("Modchip Payload Setting:       -", 0xFF00FF00),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("Modchip Mode Setting:          -", 0xFF00FF00),
@@ -1234,7 +1234,7 @@ ment_t ment_top[] = {
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("VOL+ Strap detected:           -", 0xFF00FF00),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("Joycon Strap Detected:         -", 0xFF00FF00),
+	MDEF_CAPTION("Joycon Strap Detected:         -", 0xFF00FF00),*/
 	MDEF_END()
 };
 menu_t menu_top = {
@@ -1285,7 +1285,7 @@ void ipl_main()
 	gfx_con_init(&gfx_con, &gfx_ctxt);
 
 	display_backlight_pwm_init();
-	u32 btn = btn_wait_timeout(1000, BTN_VOL_DOWN);
+	/*u32 btn = btn_wait_timeout(1000, BTN_VOL_DOWN);
 	if (btn & BTN_VOL_DOWN){
 		while (true)
 		tui_do_menu(&gfx_con, &menu_top);
@@ -1302,5 +1302,7 @@ void ipl_main()
 		msleep(1000);
 		while (true)
 		tui_do_menu(&gfx_con, &menu_top);
-	}
+	}*/
+	while (true)
+		tui_do_menu(&gfx_con, &menu_top);
 }

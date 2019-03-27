@@ -16,12 +16,12 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////BOARDS
 // uncomment your chip and comment the others. Will build!!!
-//#define TRINKET_REBUG
+#define TRINKET_REBUG
 //#define TRINKETMETHOD3
 //#define TRINKETLEGACY3
 //#define GEMMA
 //#define ITSYBITSY
-#define FEATHER
+//#define FEATHER
 //#define RCMX86_INTERNAL
 //#define EXEN_MINI **currently incomplete
 //#define RCMX86
@@ -87,12 +87,7 @@ extern void mode_check();
 extern void long_press();
 
 //includes
-#include "hkpart1.h"
-#include "hkpart2.h"
-#include "hkpart3.h"
-#include "hkpart4.h"
-#include "hkpart5.h"
-#include "argon.h"
+#include "fusee.h"
 #include "modes.h"
 #include "boards.h"
 #include "usb_setup.h"
@@ -625,27 +620,7 @@ void pushpayload() {
   DEBUG_PRINTLN("Sending payload...");
   UHD_Pipe_Alloc(tegraDeviceAddress, 0x01, USB_HOST_PTYPE_BULK, USB_EP_DIR_OUT, 0x40, 0, USB_HOST_NB_BK_1);
   packetsWritten = 0;
-  if (hekate == true) {
-    if (UNWRITTEN_PAYLOAD_NUMBER == 1) {
-      sendPayload(HKSECTION_1, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 2) {
-      sendPayload(HKSECTION_2, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 3) {
-      sendPayload(HKSECTION_3, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 4) {
-      sendPayload(HKSECTION_4, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 5) {
-      sendPayload(HKSECTION_5, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 6) {
-      sendPayload(HKSECTION_6, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 7) {
-      sendPayload(HKSECTION_7, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 8) {
-      sendPayload(HKSECTION_8, HKSECTION_SIZE);
-    }
-  } else if (argon == true) {
-    sendPayload (ARGON, ARGON_SIZE);
-  }
+  sendPayload (FUSEE, FUSEE_SIZE);
 
   if (packetsWritten % 2 != 1)
   {

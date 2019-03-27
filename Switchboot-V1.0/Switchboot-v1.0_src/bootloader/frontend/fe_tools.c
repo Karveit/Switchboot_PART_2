@@ -49,6 +49,7 @@ extern void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_st
 extern void emmc_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
 extern void emmc_screenshot_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
 extern void dump_keys();
+extern char* itoa(int, char* , int);
 
 void dump_all_keys(){
 	if (sd_mount()){

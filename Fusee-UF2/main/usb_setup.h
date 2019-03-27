@@ -139,67 +139,7 @@ void sendPayload(const byte *payload, uint32_t payloadLength)
 
   usbBufferedWrite(intermezzo, INTERMEZZO_SIZE);
   usbBufferedWrite(zeros, 0xFA4);
-  if (hekate == true){
-  usbBufferedWrite(HKPART1, HKPART1_SIZE);
   usbBufferedWrite(payload, payloadLength);
-  usbBufferedWrite(MIDSECTION, MIDSECTION_SIZE);
-  
-  if (UNWRITTEN_PAYLOAD_NUMBER == 1){
-    usbBufferedWrite(NUMBER1, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 2){
-    usbBufferedWrite(NUMBER2, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 3){
-    usbBufferedWrite(NUMBER3, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 4){
-    usbBufferedWrite(NUMBER4, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 5){
-    usbBufferedWrite(NUMBER5, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 6){
-    usbBufferedWrite(NUMBER6, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 7){
-    usbBufferedWrite(NUMBER7, 1);
-  } else if (UNWRITTEN_PAYLOAD_NUMBER == 8){
-    usbBufferedWrite(NUMBER8, 1);
-  }
-    
-  usbBufferedWrite(MODCHIP_MODE, 35);
-  if (UNWRITTEN_MODE_NUMBER == 1){
-    usbBufferedWrite(NUMBER1, 1);
-  } else if (UNWRITTEN_MODE_NUMBER == 2){
-    usbBufferedWrite(NUMBER2, 1);
-  } else if (UNWRITTEN_MODE_NUMBER == 3){
-    usbBufferedWrite(NUMBER3, 1);
-  } else if (UNWRITTEN_MODE_NUMBER == 4){
-    usbBufferedWrite(NUMBER4, 1);
-  } else if (UNWRITTEN_MODE_NUMBER == 5){
-    usbBufferedWrite(NUMBER5, 1);
-  }
-  usbBufferedWrite(USB_STRAP_DETECTED, 33);
-  if (USB_STRAP_TEST == 1) {
-    usbBufferedWrite(YES, 3);
-  } else {
-    usbBufferedWrite(NO, 3);
-  }
-
-  usbBufferedWrite(VOL_STRAP_DETECTED, 33);
-  if (VOLUP_STRAP_TEST == 1) {
-    usbBufferedWrite(YES, 3);
-  } else {
-    usbBufferedWrite(NO, 3);
-  }
-
- usbBufferedWrite(JOYCON_STRAP_DETECTED, 33);
-  if (JOYCON_STRAP_TEST == 1) {
-    usbBufferedWrite(YES, 3);
-  } else {
-    usbBufferedWrite(NO, 3);
-  }
-   
- usbBufferedWrite(ENDSECTION, ENDSECTION_SIZE);
-  } else 
-  if (argon == true){
-    usbBufferedWrite(payload, payloadLength);
-  }
   usbFlushBuffer();
 }
 

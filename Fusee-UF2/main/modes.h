@@ -34,8 +34,5 @@ void mode_check() {
   return;
   } else {
     UNWRITTEN_MODE_NUMBER = 0;
-    hekate = false; argon = true;
-    AMOUNT_OF_PAYLOADS = 1;
-    AUTO_INCREASE_PAYLOAD_on = 0;
   }
 }

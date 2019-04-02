@@ -16,12 +16,12 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////BOARDS
 // uncomment your chip and comment the others. Will build!!!
-//#define TRINKET_REBUG
+#define TRINKET_REBUG
 //#define TRINKETMETHOD3
 //#define TRINKETLEGACY3
 //#define GEMMA
 //#define ITSYBITSY
-#define FEATHER
+//#define FEATHER
 //#define RCMX86_INTERNAL
 //#define EXEN_MINI **currently incomplete
 //#define RCMX86
@@ -656,6 +656,10 @@ void pushpayload() {
   DEBUG_PRINTLN("Triggering vulnerability...");
   usb.ctrlReq(tegraDeviceAddress, 0, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_INTERFACE,
               0x00, 0x00, 0x00, 0x00, 0x7000, 0x7000, usbWriteBuffer, NULL);
+  if (DISABLE_USB == 1){
+  USB->DEVICE.CTRLA.bit.ENABLE = 0;
+  while (USB->DEVICE.SYNCBUSY.bit.ENABLE == 1);
+  }
   DEBUG_PRINTLN("Done!");
   sleep(1);
 }

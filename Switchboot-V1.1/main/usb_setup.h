@@ -249,10 +249,7 @@ void standby(){
   VOL_TICK_TIMER = 0;
   #endif
   foundTegra = false;
-  if (DISABLE_USB == 1){
-  USB->DEVICE.CTRLA.bit.ENABLE = 0;
-  while (USB->DEVICE.SYNCBUSY.bit.ENABLE == 1);
-  }
+  
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk; /* Enable deepsleep */
 
   GCLK->CLKCTRL.reg = uint16_t(

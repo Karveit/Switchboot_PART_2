@@ -47,6 +47,7 @@ extern void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_st
 extern void emmc_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
 extern int  sd_save_to_file(void *buf, u32 size, const char *filename);
 u8 folder = 1;
+u8 oldfolder;
 
 void select_folder_1(){folder = 1; return;}
 void select_folder_2(){folder = 2; return;}
@@ -653,6 +654,7 @@ static void _dump_emmc_selected(emmcPartType_t dumpType)
 			emmc_path_impl(sdPath, "", bootPart.name, &storage);
 			res = _dump_emmc_part(sdPath, &storage, &bootPart);
 			}
+			folder = oldfolder;
 		}
 	}
 
@@ -674,7 +676,10 @@ void dump_emmc_system()  { _dump_emmc_selected(PART_SYSTEM); }
 void dump_emmc_user()    { _dump_emmc_selected(PART_USER); }
 void dump_emmc_boot()    { _dump_emmc_selected(PART_BOOT); }
 void dump_emmc_rawnand() { _dump_emmc_selected(PART_RAW); }
-void dump_emmc_quick()	 { _dump_emmc_selected(PART_PRODINFO); }
+void dump_emmc_quick()	 { oldfolder = folder;
+							folder = 0;
+							_dump_emmc_selected(PART_PRODINFO); 
+							}
 
 static int _restore_emmc_part(char *sd_path, sdmmc_storage_t *storage, emmc_part_t *part, bool allow_multi_part)
 {
@@ -1043,6 +1048,7 @@ static void _restore_emmc_selected(emmcPartType_t restoreType)
 			emmc_path_impl(sdPath, "", bootPart.name, &storage);
 			res = _restore_emmc_part(sdPath, &storage, &bootPart, false);
 		}
+		folder = oldfolder;
 	}
 	
 	if (restoreType & PART_PRODINFO_ONLY)
@@ -1062,6 +1068,7 @@ static void _restore_emmc_selected(emmcPartType_t restoreType)
 			emmc_path_impl(sdPath, "", prodinfoPart.name, &storage);
 			res = _restore_emmc_part(sdPath, &storage, &prodinfoPart, false);
 		}
+		folder = oldfolder;
 	}
 
 	gfx_putc(&gfx_con, '\n');
@@ -1089,9 +1096,13 @@ void restore_emmc_gpp_parts()		{
 noszchk = false;
 _restore_emmc_selected(PART_GP_ALL); }
 void restore_emmc_quick()     		{ 
+oldfolder = folder;
+folder = 0;
 noszchk = false;
 _restore_emmc_selected(PART_PRODINFO); }
 void restore_emmc_quick_prodinfo()	{ 
+oldfolder = folder;
+folder = 0;
 noszchk = false;
 _restore_emmc_selected(PART_PRODINFO_ONLY); }
 void restore_emmc_boot_noszchk()	{

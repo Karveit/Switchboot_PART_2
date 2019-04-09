@@ -150,6 +150,7 @@ int sd_save_to_file(void *buf, u32 size, const char *filename)
 
 void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage)
 {
+	if (folder != 0){
 	sdmmc_storage_t storage2;
 	bool init_done = false;
 	memcpy(path, "backup", 7);
@@ -172,6 +173,7 @@ void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t
 		memcpy(path + strlen(path), "5", 2);
 	}
 	
+	
 	f_mkdir(path);
 	
 	memcpy(path + strlen(path), sub_dir, sub_dir_len + 1);
@@ -179,9 +181,10 @@ void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t
 		f_mkdir(path);
 	memcpy(path + strlen(path), "/", 2);
 	memcpy(path + strlen(path), filename, filename_len + 1);
-
+	
 	if (init_done)
 		sdmmc_storage_end(&storage2);
+	}
 }
 
 void emmc_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage)

@@ -23,7 +23,6 @@
 #include "config/config.h"
 #include "gfx/di.h"
 #include "gfx/gfx.h"
-#include "gfx/logos.h"
 #include "gfx/tui.h"
 #include "hos/hos.h"
 #include "hos/secmon_exo.h"
@@ -64,6 +63,12 @@ u8 *Kc_MENU_LOGO;
 
 hekate_config h_cfg;
 boot_cfg_t __attribute__((section ("._boot_cfg"))) b_cfg;
+const volatile ipl_ver_meta_t __attribute__((section ("._ipl_version"))) ipl_ver = {
+	.magic = BL_MAGIC,
+	.version = (BL_VER_MJ + '0') | ((BL_VER_MN + '0') << 8) | ((BL_VER_HF + '0') << 16),
+	.rsvd0 = 0,
+	.rsvd1 = 0
+};
 
 bool sd_mount()
 {
@@ -233,6 +238,21 @@ void reloc_patcher(u32 payload_dst, u32 payload_src, u32 payload_size)
 	}
 }
 
+bool is_ipl_updated(void *buf)
+{
+	ipl_ver_meta_t *update_ft = (ipl_ver_meta_t *)(buf + PATCHED_RELOC_SZ + sizeof(boot_cfg_t));	
+
+	if (update_ft->magic == ipl_ver.magic)
+	{
+		if (byte_swap_32(update_ft->version) <= byte_swap_32(ipl_ver.version))
+			return true;
+		return false;
+		
+	}
+	else
+		return true;
+}
+
 int launch_payload(char *path, bool update)
 {
 	if (!update)
@@ -271,6 +291,9 @@ int launch_payload(char *path, bool update)
 
 		f_close(&fp);
 		free(path);
+
+		if (update && is_ipl_updated(buf))
+			return 1;
 
 		sd_unmount();
 
@@ -388,13 +411,8 @@ void launch_tools(u8 type)
 		} else if (type == 8 || type == 18){
 			memcpy(dir, "sxos", 5);
 		}
-		
-		
-		if (type != 4 || type != 14){
+
 			filelist = dirlist(dir, "*.bin", false);
-		} else {
-			filelist = dirlist(dir, NULL, false);
-		}
 
 		u32 i = 0;
 
@@ -437,8 +455,10 @@ void launch_tools(u8 type)
 			}
 		}
 		else
-			EPRINTF("No payloads or modules found.");
-
+		{
+			EPRINTF("No files found in\n\n");
+			EPRINTFARGS("%s", dir);
+		}
 		free(ments);
 		free(filelist);
 	}
@@ -481,7 +501,6 @@ void launch_tools(u8 type)
 				return;
 				}
 			f_lseek(&fp, f_size(&fp));
-			f_puts("{-- Payload --}\n", &fp);
 			f_puts("[", &fp);
 			f_puts(dir, &fp);
 			f_puts("]\n", &fp);
@@ -490,12 +509,10 @@ void launch_tools(u8 type)
 			gfx_printf ("Added:\n\n%s\n\nto hekate_ipl.ini\n\nPress any key.", dir);
 			f_close(&fp);
 			}
-			//todo
-			
-		}
-		else if (type == 4){
+			else {
 			ianos_loader(true, dir, DRAM_LIB, NULL);
-		}
+			}
+	}
 
 out:
 	sd_unmount();
@@ -556,7 +573,7 @@ void ini_list_launcher()
 			{
 				memset(&ments[i], 0, sizeof(ment_t));
 				menu_t menu = {
-					ments, "Launch ini configurations", 0, 0
+					ments, "Launch linux / ini entry", 0, 0
 				};
 
 				cfg_tmp = (ini_sec_t *)tui_do_menu(&menu);
@@ -1175,13 +1192,6 @@ ment_t ment_tools[] = {
 	//MDEF_HANDLER("Fix fuel gauge configuration", fix_fuel_gauge_configuration),
 	//MDEF_HANDLER("Reset all battery cfg", reset_pmic_fuel_gauge_charger_config),
 	//MDEF_HANDLER("Minerva", minerva), // Uncomment for testing Minerva Training Cell
-	MDEF_CAPTION("-- Info --", 0xFF00FF00),
-	//MDEF_HANDLER("Ipatches & bootrom info", bootrom_ipatches_info),
-	MDEF_HANDLER("Print fuse info", print_fuseinfo),
-	//MDEF_HANDLER("Print kfuse info", print_kfuseinfo),
-	MDEF_HANDLER("Print eMMC info", print_mmc_info),
-	//MDEF_HANDLER("Print SD Card info", print_sdcard_info),
-	//MDEF_HANDLER("Print battery info", print_battery_info),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Other --", 0xFFFFFF00),
 	MDEF_HANDLER("AutoRCM", menu_autorcm),
@@ -1220,8 +1230,8 @@ menu_t menu_addini = {
 ment_t ment_launch[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("Choose a folder", 0xFF00FF00),
-	
+	MDEF_CAPTION("Choose a folder or", 0xFF00FF00),
+	MDEF_HANDLER("Boot ini / linux", ini_list_launcher),
 	MDEF_CHGLINE(),
 	MDEF_HANDLER("SD:/", type1),
 	MDEF_HANDLER("SD:/argon/payloads", type2),
@@ -1245,8 +1255,10 @@ menu_t menu_launch = {
 
 ment_t ment_top[] = {
 	MDEF_HANDLER("Boot (from INI)", launch_firmware),
-	MDEF_MENU("Boot payload", &menu_launch),
-	MDEF_MENU("Add payload to hekate_ipl.ini", &menu_addini),
+	MDEF_CHGLINE(),
+	MDEF_MENU("Boot payload / other ini", &menu_launch),
+	MDEF_MENU("Add payload to INI", &menu_addini),
+	MDEF_CHGLINE(),
 	MDEF_MENU("Boot options", &menu_options),
 	MDEF_CAPTION("---------------", 0xFF444444),
 	MDEF_MENU("System Tools / Info", &menu_tools),
@@ -1274,7 +1286,7 @@ ment_t ment_top[] = {
 };
 menu_t menu_top = {
 	ment_top,
-	"Switchboot v1.3.0 - Hekate v4.10.0", 0, 0
+	"Switchboot v1.3.1 - Hekate v4.10.0", 0, 0
 };
 
 #define IPL_STACK_TOP  0x90010000
@@ -1317,7 +1329,6 @@ void ipl_main()
 #endif
 
 	gfx_con_init();
-
 	display_backlight_pwm_init();
 	u8 btn = btn_wait_timeout(0, BTN_VOL_DOWN | BTN_VOL_UP);
 	if (btn & BTN_VOL_DOWN || btn & BTN_VOL_UP){

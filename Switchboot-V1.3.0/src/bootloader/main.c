@@ -389,10 +389,11 @@ void launch_tools(u8 type)
 			memcpy(dir, "sxos", 5);
 		}
 		
-		if (type == 0){
-		filelist = dirlist(dir, NULL, false);
+		
+		if (type != 4 || type != 14){
+			filelist = dirlist(dir, "*.bin", false);
 		} else {
-		filelist = dirlist(dir, "*.bin", false);
+			filelist = dirlist(dir, NULL, false);
 		}
 
 		u32 i = 0;

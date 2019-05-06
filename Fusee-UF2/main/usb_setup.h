@@ -139,7 +139,41 @@ void sendPayload(const byte *payload, uint32_t payloadLength)
 
   usbBufferedWrite(intermezzo, INTERMEZZO_SIZE);
   usbBufferedWrite(zeros, 0xFA4);
+  if (hekate == true){
+  usbBufferedWrite(HKPART1, HKPART1_SIZE);
   usbBufferedWrite(payload, payloadLength);
+  usbBufferedWrite(inbetween_payloads, inbetween_payloads_size);
+  usbBufferedWrite(payload, payloadLength);
+  usbBufferedWrite(MIDSECTION, MIDSECTION_SIZE);
+  usbBufferedWrite(USB_STRAP_DETECTED, 4);
+  if (USB_STRAP_TEST == 1) {
+    usbBufferedWrite(YES, 3);
+  } else {
+    usbBufferedWrite(NO, 3);
+  }
+
+  usbBufferedWrite(VOL_STRAP_DETECTED, 6);
+  if (VOLUP_STRAP_TEST == 1) {
+    usbBufferedWrite(YES, 3);
+  } else {
+    usbBufferedWrite(NO, 3);
+  }
+
+  usbBufferedWrite(JOYCON_STRAP_DETECTED, 11);
+  if (JOYCON_STRAP_TEST == 1) {
+    usbBufferedWrite(YES, 3);
+  } else {
+    usbBufferedWrite(NO, 3);
+  }
+  usbBufferedWrite(AFTER_STRAPS, 1093);
+
+  usbBufferedWrite(payload, payloadLength);
+   
+ usbBufferedWrite(ENDSECTION, ENDSECTION_SIZE);
+  } else 
+  if (argon == true){
+    usbBufferedWrite(payload, payloadLength);
+  }
   usbFlushBuffer();
 }
 
@@ -188,10 +222,7 @@ void standby(){
   VOL_TICK_TIMER = 0;
   #endif
   foundTegra = false;
-  if (DISABLE_USB == 1){
-  USB->DEVICE.CTRLA.bit.ENABLE = 0;
-  while (USB->DEVICE.SYNCBUSY.bit.ENABLE == 1);
-  }
+  
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk; /* Enable deepsleep */
 
   GCLK->CLKCTRL.reg = uint16_t(

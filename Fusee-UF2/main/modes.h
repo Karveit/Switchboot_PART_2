@@ -32,7 +32,5 @@ void mode_check() {
     UNWRITTEN_MODE_NUMBER = DEFAULT_MODE;} 
     else if (UNWRITTEN_MODE_NUMBER > MODES_AVAILABLE) {UNWRITTEN_MODE_NUMBER = 1;}
   return;
-  } else {
-    UNWRITTEN_MODE_NUMBER = 0;
   }
 }

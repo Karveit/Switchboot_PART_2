@@ -26,7 +26,7 @@ void first_long_press() {
   if (VOLUP_HELD != LOW) {
     VOL_TICK_TIMER = 0;
     longpress1 = false; longpress2 = false; longpress3 = false;
-    cycle_payloads();
+    cycle_other_options();
   } else {
     longpress1 = true;
   }
@@ -40,53 +40,23 @@ void second_long_press() {
   if (VOLUP_HELD != LOW) {
     VOL_TICK_TIMER = 0;
     longpress1 = false; longpress2 = false; longpress3 = false;
-    cycle_modes();
+    full_eeprom_reset();
     return;
   } else {
     longpress2 = true;
   }
 }
 
-void third_long_press() {
-  //VOLUP_HELD = digitalRead(VOLUP_STRAP_PIN);
-  confirm_led(20, 0, NEW_DOTSTAR_BRIGHTNESS, 0);
-  VOL_TICK_TIMER = VOL_TICK_TIMER + (1000);//align to seconds to keep timing
-  VOLUP_HELD = digitalRead(VOLUP_STRAP_PIN);
-  if (VOLUP_HELD != LOW) {
-    VOL_TICK_TIMER = 0;
-    longpress1 = false; longpress2 = false; longpress3 = false;
-    cycle_other_options();
-  } else {
-    longpress3 = true;
-  }
-}
-
-void fourth_long_press() {
-  //VOLUP_HELD = digitalRead(VOLUP_STRAP_PIN);
-  confirm_led(20, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS);
-  VOLUP_HELD = digitalRead(VOLUP_STRAP_PIN);
-  if (VOLUP_HELD != LOW) {
-    longpress1 = false; longpress2 = false; longpress3 = false;
-    VOL_TICK_TIMER = 0;
-    confirm_led(20, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS);
-    full_eeprom_reset();
-    return;
-  } else {
-    setLedColor("red");
-    NVIC_SystemReset();
-  }
-}
-
 void long_press() {
   VOL_TICK_TIMER = 0;
-  if (!VOLUP_STRAP_TEST){
-  VOLUP_STRAP_TEST = 1;
-  EEPROM_VOL_CONTROL_STRAP.write(VOLUP_STRAP_TEST);
+  if (!VOLUP_STRAP_TEST) {
+    VOLUP_STRAP_TEST = 1;
+    EEPROM_VOL_CONTROL_STRAP.write(VOLUP_STRAP_TEST);
   }
   pinMode (VOLUP_STRAP_PIN, INPUT_PULLUP);
-  #ifdef ONBOARD_LED
+#ifdef ONBOARD_LED
   pinMode (ONBOARD_LED, OUTPUT);
-  #endif
+#endif
   //set initial button values
   bool volup_pressed = false;
   bool volup_released = true;
@@ -111,10 +81,6 @@ void long_press() {
         setLedColor("blue");
       } else if (VOL_TICK_TIMER > LONG_PRESS_TRIGGER1 && VOL_TICK_TIMER < LONG_PRESS_TRIGGER2) {
         setLedColor("orange");
-      } else if (VOL_TICK_TIMER > LONG_PRESS_TRIGGER2 && VOL_TICK_TIMER < LONG_PRESS_TRIGGER3) {
-        setLedColor("green");
-      } else if (VOL_TICK_TIMER > LONG_PRESS_TRIGGER3 && VOL_TICK_TIMER < FULL_RESET_TRIGGER) {
-        setLedColor("white");
       }
     } else if ((!volup_pressed) && VOL_TICK_TIMER > 0) {
       VOL_TICK_TIMER = 0;
@@ -122,27 +88,15 @@ void long_press() {
       return;
     }
     //final check and execute trigger
-    if (VOL_TICK_TIMER == LONG_PRESS_TRIGGER1){
+    if (VOL_TICK_TIMER == LONG_PRESS_TRIGGER1) {
       confirm_led(20, 0, 0, NEW_DOTSTAR_BRIGHTNESS);
-      if (digitalRead(VOLUP_STRAP_PIN) != LOW){
-        cycle_payloads();
-      }
-    }
-    if (VOL_TICK_TIMER == LONG_PRESS_TRIGGER2){
-      confirm_led(20, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS, 0);
-      if (digitalRead(VOLUP_STRAP_PIN) != LOW){
-        cycle_modes();
-      }
-    }
-    if (VOL_TICK_TIMER == LONG_PRESS_TRIGGER3){
-      confirm_led(20, 0, NEW_DOTSTAR_BRIGHTNESS, 0);
-      if (digitalRead(VOLUP_STRAP_PIN) != LOW){
+      if (digitalRead(VOLUP_STRAP_PIN) != LOW) {
         cycle_other_options();
       }
     }
-    if (VOL_TICK_TIMER == FULL_RESET_TRIGGER){
-      confirm_led(50, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS);
-      if (digitalRead(VOLUP_STRAP_PIN) != LOW){
+    if (VOL_TICK_TIMER == LONG_PRESS_TRIGGER2) {
+      confirm_led(20, NEW_DOTSTAR_BRIGHTNESS, NEW_DOTSTAR_BRIGHTNESS, 0);
+      if (digitalRead(VOLUP_STRAP_PIN) != LOW) {
         full_eeprom_reset();
       }
     }

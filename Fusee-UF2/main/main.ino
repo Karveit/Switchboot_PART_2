@@ -11,17 +11,17 @@
 #define DEFAULT_MODE 1
 #define MODES_AVAILABLE 5
 #define BLINK_PAYLOAD_BEFORE_SEARCH 0
-#define BLINK_PAYLOAD_AFTER_SEARCH 1
-#define DEFAULT_DOTSTAR_BRIGHTNESS 128
+#define BLINK_PAYLOAD_AFTER_SEARCH 0
+#define DEFAULT_DOTSTAR_BRIGHTNESS 64
 
 //////////////////////////////////////////////////////////////////////////////////////////BOARDS
 // uncomment your chip and comment the others. Will build!!!
-//#define TRINKET_REBUG
+#define TRINKET_REBUG
 //#define TRINKETMETHOD3
 //#define TRINKETLEGACY3
 //#define GEMMA
 //#define ITSYBITSY
-#define FEATHER
+//#define FEATHER
 //#define RCMX86_INTERNAL
 //#define EXEN_MINI **currently incomplete
 //#define RCMX86
@@ -32,7 +32,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////======
 
 //Globals
-#define MODESWITCH_ENABLED 1 // Enables / Disables modeswitch. If disabled, default values used in modes. 1 = modeswitch enabled, 0 = pin 4 will reset SAMD upon being grounded
+#define MODESWITCH_ENABLED 0 // Enables / Disables modeswitch. If disabled, default values used in modes. 1 = modeswitch enabled, 0 = pin 4 will reset SAMD upon being grounded
 #define AUTO_SEND_ON_PAYLOAD_INCREASE_PIN 0  //Automatic send when payload pin is activated. 1 = on, 0 = off
 #define LOOK_FOR_TEGRA_LED_SPEED 100 //How fast to blink when searching. Higher = slower
 //set LED on/off times
@@ -42,7 +42,7 @@
 #define STATUS_LED_TIME_us 1000000 // How long to show red or green light for success or fail - 1 second
 //set time to hold straps low for to enter RCM.
 #define RCM_STRAP_TIME_us 1000000  // Amount of time to hold RCM_STRAP low and then launch payload
-#define AMOUNT_OF_OTHER_OPTIONS 3 // lock out disable chip
+#define AMOUNT_OF_OTHER_OPTIONS 2 // lock out disable chip
 
 FlashStorage(EEPROM_PAYLOAD_NUMBER, uint32_t);
 FlashStorage(EEPROM_MODE_NUMBER, uint32_t);
@@ -73,11 +73,11 @@ uint32_t SELECTED;
 uint32_t CURRENT_FLASH;
 unsigned long battvalue;
 unsigned long i;
-unsigned long MASTER_VOLUP_TIMER = 10000;//master timer
-unsigned long FULL_RESET_TRIGGER = 10000;//10 seconds long press
+unsigned long MASTER_VOLUP_TIMER = 12000;//master timer
+unsigned long FULL_RESET_TRIGGER = 12000;//15 seconds long press
 unsigned long LONG_PRESS_TRIGGER1 = 3000;//3 seconds long press
-unsigned long LONG_PRESS_TRIGGER2 = 5000;//5 seconds long press
-unsigned long LONG_PRESS_TRIGGER3 = 7000;//7 seconds lng press
+unsigned long LONG_PRESS_TRIGGER2 = 6000;//5 seconds long press
+unsigned long LONG_PRESS_TRIGGER3 = 9000;//10 seconds lng press
 unsigned long VOL_TICK_TIMER = 0;
 bool flatbatt = false;
 bool hekate; bool argon;
@@ -87,12 +87,7 @@ extern void mode_check();
 extern void long_press();
 
 //includes
-#include "hkpart1.h"
-#include "hkpart2.h"
-#include "hkpart3.h"
-#include "hkpart4.h"
-#include "hkpart5.h"
-#include "argon.h"
+#include "fusee.h"
 #include "modes.h"
 #include "boards.h"
 #include "usb_setup.h"
@@ -625,27 +620,7 @@ void pushpayload() {
   DEBUG_PRINTLN("Sending payload...");
   UHD_Pipe_Alloc(tegraDeviceAddress, 0x01, USB_HOST_PTYPE_BULK, USB_EP_DIR_OUT, 0x40, 0, USB_HOST_NB_BK_1);
   packetsWritten = 0;
-  if (hekate == true) {
-    if (UNWRITTEN_PAYLOAD_NUMBER == 1) {
-      sendPayload(HKSECTION_1, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 2) {
-      sendPayload(HKSECTION_2, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 3) {
-      sendPayload(HKSECTION_3, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 4) {
-      sendPayload(HKSECTION_4, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 5) {
-      sendPayload(HKSECTION_5, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 6) {
-      sendPayload(HKSECTION_6, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 7) {
-      sendPayload(HKSECTION_7, HKSECTION_SIZE);
-    } else if (UNWRITTEN_PAYLOAD_NUMBER == 8) {
-      sendPayload(HKSECTION_8, HKSECTION_SIZE);
-    }
-  } else if (argon == true) {
-    sendPayload (ARGON, ARGON_SIZE);
-  }
+  sendPayload (FUSEE, FUSEE_SIZE);
 
   if (packetsWritten % 2 != 1)
   {
@@ -656,10 +631,6 @@ void pushpayload() {
   DEBUG_PRINTLN("Triggering vulnerability...");
   usb.ctrlReq(tegraDeviceAddress, 0, USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_INTERFACE,
               0x00, 0x00, 0x00, 0x00, 0x7000, 0x7000, usbWriteBuffer, NULL);
-  if (DISABLE_USB == 1){
-  USB->DEVICE.CTRLA.bit.ENABLE = 0;
-  while (USB->DEVICE.SYNCBUSY.bit.ENABLE == 1);
-  }
   DEBUG_PRINTLN("Done!");
   sleep(1);
 }

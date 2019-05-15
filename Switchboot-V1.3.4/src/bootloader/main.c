@@ -430,29 +430,32 @@ void auto_launch_dummy_payload()
 		{
 			sd_unmount();
 			
-			gfx_printf ("No strap information available");
+			EPRINTF ("No strap information available\n\n");
 			goto out;
 		}
 
 		u32 size = f_size(&fp);
 
-		if (size != 241) goto out;
+		if (size != 241) {
+			EPRINTF ("Strap information invalid or corrupt\n\n");
+			goto out;
+		}
 
 		if (f_read(&fp, strap_info, size, NULL))
 		{
 			f_close(&fp);
 			sd_unmount();
-			gfx_printf ("Strap information invalid");
+			EPRINTF ("Strap information read failed.\n\n");
 			goto out;
 		}
 
 		f_close(&fp);
 
-	gfx_printf ("\nFound strap information\n\n");
 	gfx_printf("%k%s%k\n", 0xFF00FF00, strap_info, 0xFFFFFFFF);
+	return 0;
 	}
 out:	
-	return 0;
+	return 1;
 	}
 
 extern void ini_list_launcher();
@@ -1195,11 +1198,30 @@ void about()
 		"Switchboot brought to you by Mattytrog\n"
 		"and everybody else.\n\n";
 
+	static const char uf2_strap_info[] =
+		"Payload Override:   payload.bin"
+		"\n\n"
+		"SAMD selection:    payload1.bin"
+		"\n\n"
+		"Mode:                         ?"
+		"\n\n"
+		"USB:                         NO"
+		"\n\n"
+		"VOL+:                        NO"
+		"\n\n"
+		"Joycon:                      NO"
+		"\n\n"
+		"Adafruit Trinket M0 SAMD21E18AU"
+		"\n\n";
+		
 	gfx_clear_black(0x00);
 	gfx_con_setpos(0, 0);
 
-	gfx_printf(credits, 0xFFFFFFFF);
-	read_strap_info();
+	gfx_printf("%k%s", 0xFFFFFFFF, credits);
+	if (read_strap_info() == 1) {
+		gfx_printf("%k%s", 0xFF00FF00, uf2_strap_info);
+	} else gfx_printf ("\nStraps_info.txt OK");
+	
 
 	btn_wait();
 }
@@ -1280,9 +1302,9 @@ ment_t ment_backup_choose_folder[] = {
 	MDEF_HANDLER("Backup Folder 3 (BACKUP_3)", select_folder_3),
 	MDEF_HANDLER("Backup Folder 4 (BACKUP_4)", select_folder_4),
 	MDEF_HANDLER("Backup Folder 5 (BACKUP_5)", select_folder_5),
-	MDEF_HANDLER("Backup Folder 6 (BACKUP_6)", select_folder_6),
-	MDEF_HANDLER("Backup Folder 7 (BACKUP_7)", select_folder_7),
-	MDEF_HANDLER("Backup Folder 8 (BACKUP_8)", select_folder_8),
+	//MDEF_HANDLER("Backup Folder 6 (BACKUP_6)", select_folder_6),
+	//MDEF_HANDLER("Backup Folder 7 (BACKUP_7)", select_folder_7),
+	//MDEF_HANDLER("Backup Folder 8 (BACKUP_8)", select_folder_8),
 	MDEF_CHGLINE(),
 	MDEF_END()
 };

@@ -244,7 +244,9 @@ void standby(){
   VOL_TICK_TIMER = 0;
   #endif
   foundTegra = false;
-  
+  #ifdef USB_LOGIC
+  digitalWrite(USB_LOGIC, HIGH);
+  #endif
   SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk; /* Enable deepsleep */
 
   GCLK->CLKCTRL.reg = uint16_t(

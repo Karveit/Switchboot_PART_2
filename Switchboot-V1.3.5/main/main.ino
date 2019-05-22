@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////BOARDS
 // uncomment your chip and comment the others. Will build!!!
 
-#define DISABLE_STRAP_INFO_TXT 1 //comment out if making a bin file
+//#define DISABLE_STRAP_INFO_TXT 1
 //#define TRINKET
 //#define TRINKETMETHOD3
 //#define TRINKETLEGACY3

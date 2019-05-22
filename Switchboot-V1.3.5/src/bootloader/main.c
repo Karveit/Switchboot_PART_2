@@ -420,40 +420,50 @@ void auto_launch_dummy_payload()
 	int read_strap_info()
 	{
 	FIL fp;
-	char* strap_info = malloc(345);
+	bool read_info = false;
 	
 	char path[35] = "bootloader/fusee/straps_info.txt";
 	if (sd_mount())
 	{
+		f_unlink("intentionally_left_blank_for_UF2");
 		
 		if (f_open(&fp, path, FA_READ))
 		{
 			sd_unmount();
+			read_info = false;
 			goto out;
 		}
 
 		u32 size = f_size(&fp);
-
+		char* strap_buffer = malloc(size + 1);
+		memset(strap_buffer, 0, size + 1);
 		if (size != 339) {
 			EPRINTF ("Strap information invalid or corrupt\n\n");
+			read_info = false;
 			goto out;
 		}
 
-		if (f_read(&fp, strap_info, size, NULL))
+		if (f_read(&fp, strap_buffer, size, NULL))
 		{
 			f_close(&fp);
 			sd_unmount();
 			EPRINTF ("Strap information read failed.\n\n");
+			read_info = false;
 			goto out;
 		}
-
+		const char* strap_info = strap_buffer;
+		free(strap_buffer);
 		f_close(&fp);
 
 	gfx_printf("%k%s%k\n", 0xFF00FF00, strap_info, 0xFFFFFFFF);
-	return 0;
+	
+	read_info = true;
 	}
-out:	
+out:
+sd_unmount();
+if (read_info){	
 	return 1;
+	} else return 0;
 	}
 
 extern void ini_list_launcher();
@@ -1215,12 +1225,13 @@ void about()
 	gfx_con_setpos(0, 0);
 
 	gfx_printf("%k%s", 0xFFFFFFFF, credits);
-	if (read_strap_info() == 1) {
+	if (read_strap_info() == 0) {
 		gfx_printf("%k%s", 0xFF00FF00, uf2_strap_info);
 	} else gfx_printf ("\nStraps_info.txt OK");
 	
 
 	btn_wait();
+	
 }
 
 ment_t ment_options[] = {

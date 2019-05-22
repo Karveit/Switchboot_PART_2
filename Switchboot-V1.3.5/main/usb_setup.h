@@ -140,19 +140,17 @@ void sendPayload(const byte *payload, uint32_t payloadLength)
   usbBufferedWrite(intermezzo, INTERMEZZO_SIZE);
   usbBufferedWrite(zeros, 0xFA4);
   if (hekate == true){
-  usbBufferedWrite(SWPART1, 99313);
-  #ifdef DISABLE_STRAP_INFO_TXT
-  usbBufferedWrite(UNUSED_FILENAME, 15);
-  #else
-  usbBufferedWrite(STRAP_FILENAME, 15);
-  #endif
-  usbBufferedWrite(SWPART2, 228);
-  
-  
+  usbBufferedWrite(SWPART1, 99588);
   usbBufferedWrite(payload, 12);
+  usbBufferedWrite(SWPART2, 1164);
   
+  #ifdef DISABLE_STRAP_INFO_TXT
+  usbBufferedWrite(UNUSED_FILENAME, 32);
+  #else
+  usbBufferedWrite(STRAP_FILENAME, 32);
+  #endif
   
-  usbBufferedWrite(SWPART3, 2760);
+  usbBufferedWrite(SWPART3, 1600);
 
   //////////////////////////////////////////////////////////////
   usbBufferedWrite(OVERRIDE1, 34); usbBufferedWrite(PAYLOADBIN, 11);

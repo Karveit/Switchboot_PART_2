@@ -246,7 +246,7 @@ static void _config_autoboot_list(void *ent)
 		}
 		else
 		{
-			EPRINTF("\n\n Could not open 'bootloader/hekate_ipl.ini'.\n\n Press [PWR] to receate blank ini.");
+			EPRINTF("\n\n Could not open hekate_ipl.ini.\n\n [PWR] = make blank ini.");
 			goto out;
 		}
 	}
@@ -362,7 +362,7 @@ void config_autoboot()
 		}
 		else
 		{
-			EPRINTF("\n\n Could not open 'bootloader/hekate_ipl.ini'.\n\n Press [PWR] to receate blank ini.");
+			EPRINTF("\n\n Could not open hekate_ipl.ini.\n\n [PWR] = make blank ini.");
 			goto out;
 		}
 	}
@@ -465,10 +465,10 @@ void config_verification()
 
 	ments[1].type = MENT_CHGLINE;
 
-	memcpy(vr_text,       " None           (Fastest - Unsafe)", 35);
-	memcpy(vr_text + 64,  " Sparse            (Fast - Safe)",   33);
-	memcpy(vr_text + 128, " Full              (Slow - Safer)",  34);
-	memcpy(vr_text + 192, " Full w/ hashfiles (Slow - Safest)", 35);
+	memcpy(vr_text,       " None (Fastest - Unsafe)", 25);
+	memcpy(vr_text + 64,  " Sparse (Fast - Safe)",   22);
+	memcpy(vr_text + 128, " Full (Slow - Safer)",  21);
+	memcpy(vr_text + 192, " Full w/ hashfiles (Safest)", 28);
 
 	for (u32 i = 0; i < 4; i++)
 	{

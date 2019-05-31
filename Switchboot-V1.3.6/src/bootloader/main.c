@@ -79,7 +79,7 @@ bool sd_mount()
 
 	if (!sdmmc_storage_init_sd(&sd_storage, &sd_sdmmc, SDMMC_1, SDMMC_BUS_WIDTH_4, 11))
 	{
-		EPRINTF("Failed to init SD card.\nMake sure that it is inserted.\nOr that SD reader is properly seated!");
+		EPRINTF("Init SD card fail.\nCard missing or reader error.");
 	}
 	else
 	{
@@ -92,7 +92,7 @@ bool sd_mount()
 		}
 		else
 		{
-			EPRINTFARGS("Failed to mount SD card (FatFS Error %d).\nMake sure that a FAT partition exists..", res);
+			EPRINTFARGS("Mount fail (FatFS Error %d).\n", res);
 		}
 	}
 
@@ -274,7 +274,7 @@ int launch_payload(char *path, bool update)
 		FIL fp;
 		if (f_open(&fp, path, FA_READ))
 		{
-			EPRINTFARGS("Payload file is missing!\n(%s)", path);
+			EPRINTFARGS("Payload missing!\n(%s)", path);
 			sd_unmount();
 
 			return 1;
@@ -351,22 +351,6 @@ void auto_launch_argon()
 
 		}
 	}
-	
-void auto_launch_argon2()
-{
-	FIL fp;
-	if (sd_mount())
-		{
-			if (f_open(&fp, "argon/payload.bin", FA_READ))
-				return;
-			else
-			{
-				f_close(&fp);
-				launch_payload("argon/payload.bin", false);
-			}
-
-		}
-	}
 
 void auto_launch_payload_bin()
 {
@@ -437,7 +421,7 @@ void auto_launch_dummy_payload()
 		char* strap_buffer = malloc(size + 1);
 		memset(strap_buffer, 0, size + 1);
 		if (size != 339) {
-			EPRINTF ("Strap information invalid or corrupt\n\n");
+			EPRINTF ("Strap info incorrect\n\n");
 			read_info = false;
 			goto out;
 		}
@@ -446,7 +430,7 @@ void auto_launch_dummy_payload()
 		{
 			f_close(&fp);
 			sd_unmount();
-			EPRINTF ("Strap information read failed.\n\n");
+			EPRINTF ("Strap info read fail.\n\n");
 			read_info = false;
 			goto out;
 		}
@@ -500,7 +484,7 @@ if (sd_mount()){
 		return;
 	} else
 		{
-			gfx_printf("%k\n No .bin or .ini files here! Press a key.%k", 0xFFFFFF00, 0xFFFFFFFF);
+			gfx_printf("%k\n No valid files here! Press a key.%k", 0xFFFFFF00, 0xFFFFFFFF);
 			btn_wait();
 			free(file_sec);
 			free(path);
@@ -539,7 +523,7 @@ if (sd_mount()){
 			f_puts("[Stock]\n", &fp);
 			f_puts("fss0=atmosphere/fusee-secondary.bin\n", &fp);
 			f_puts("stock=1\n", &fp);
-			gfx_printf ("Added stock entry. Press any key.", file_sec);
+			gfx_printf ("Done. Press any key.", file_sec);
 			}
 			btn_wait();
 			f_close(&fp);
@@ -766,12 +750,12 @@ void launch_firmware()
 			ini_free(&ini_sections);
 		}
 		else
-			EPRINTF("Could not open 'bootloader/hekate_ipl.ini'.\nMake sure it exists!");
+			EPRINTF("Could not open hekate_ipl.ini.\n");
 	}
 
 	if (!cfg_sec)
 	{
-		gfx_puts("\nPress POWER to attempt boot.\n\nPress VOL- to go to the menu.\n\nPress VOL+ to create new ini\n");
+		gfx_puts("\n[POWER] = attempt boot.\n\n[VOL-] = main menu.\n\n[VOL+] = make new ini\n");
 		gfx_printf("\nUsing default launch configuration...\n\n\n");
 
 		u32 btn = btn_wait();
@@ -1320,7 +1304,7 @@ ment_t ment_tools[] = {
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Misc --", 0xFF00FF00),
 	MDEF_HANDLER("Dump firmware nca files", nca_to_sdcard),
-	//MDEF_HANDLER("Dump emmc save files", save_to_sdcard),
+	MDEF_HANDLER("Dump emmc save files", save_to_sdcard),
 	MDEF_HANDLER("Dump all keys", dump_all_keys),
 	MDEF_HANDLER("Dump fuse info", print_fuseinfo),
 	MDEF_HANDLER("Dump TSEC key", print_tsec_key),
@@ -1348,12 +1332,12 @@ ment_t ment_launch[] = {
 	MDEF_HANDLER("Back", home_dir),
 	MDEF_CHGLINE(),
 	MDEF_HANDLER("Other configs", ini_launch),
-	MDEF_CHGLINE(),
-	MDEF_HANDLER("Browse Payload, Linux or ini", type1),
-	MDEF_CHGLINE(),
-	MDEF_HANDLER("Add file to boot list", type2),
-	MDEF_CHGLINE(),
-	MDEF_HANDLER("Add [Stock] entry to boot list", type3),
+	
+	MDEF_HANDLER("Browse .bin / .ini", type1),
+	
+	MDEF_HANDLER("Add to boot ini", type2),
+	
+	MDEF_HANDLER("Add [Stock] to boot ini", type3),
 	MDEF_CHGLINE(),
 	MDEF_END()
 };
@@ -1449,7 +1433,6 @@ void ipl_main()
 			}
 			} else {
 			auto_launch_argon();
-			auto_launch_argon2();
 			auto_launch_payload_bin();
 			auto_launch_numbered_payload();
 			auto_launch_firmware();

@@ -90,7 +90,7 @@ static int _dump_emmc_verify(sdmmc_storage_t *storage, u32 lba_curr, char *outFi
 				f_close(&fp);
 
 				gfx_con.fntsz = 16;
-				EPRINTFARGS("\nHash file could not be opened for write (error %d).\n\nAborting..\n", res);
+				EPRINTFARGS("\nHash write fail(error %d).\n\nAborting..\n", res);
 				return 1;
 			}
 
@@ -124,7 +124,7 @@ static int _dump_emmc_verify(sdmmc_storage_t *storage, u32 lba_curr, char *outFi
 				if (!sdmmc_storage_read(storage, lba_curr, num, bufEm))
 				{
 					gfx_con.fntsz = 16;
-					EPRINTFARGS("\nFailed to read %d blocks (@LBA %08X),\nfrom eMMC!\n\nVerification failed..\n",
+					EPRINTFARGS("\nBlock read fail! %d(@LBA %08X),\n\n",
 						num, lba_curr);
 	
 					f_close(&fp);
@@ -134,7 +134,7 @@ static int _dump_emmc_verify(sdmmc_storage_t *storage, u32 lba_curr, char *outFi
 				if (f_read(&fp, bufSd, num << 9, NULL))
 				{
 					gfx_con.fntsz = 16;
-					EPRINTFARGS("\nFailed to read %d blocks (@LBA %08X),\nfrom sd card!\n\nVerification failed..\n", num, lba_curr);
+					EPRINTFARGS("\nBlock read fail! %d(@LBA %08X),\n\n", num, lba_curr);
 	
 					f_close(&fp);
 					return 1;
@@ -147,7 +147,7 @@ static int _dump_emmc_verify(sdmmc_storage_t *storage, u32 lba_curr, char *outFi
 				if (res)
 				{
 					gfx_con.fntsz = 16;
-					EPRINTFARGS("\nSD and eMMC data (@LBA %08X),\ndo not match!\n\nVerification failed..\n", lba_curr);
+					EPRINTFARGS("\nSD and eMMC data (@LBA %08X),\ndo not match!\n\nFailed!\n", lba_curr);
 	
 					f_close(&fp);
 					return 1;
@@ -186,7 +186,7 @@ static int _dump_emmc_verify(sdmmc_storage_t *storage, u32 lba_curr, char *outFi
 			if ((btn & BTN_VOL_DOWN) && (btn & BTN_VOL_UP))
 			{
 				gfx_con.fntsz = 16;
-				WPRINTF("\n\nVerification was cancelled!");
+				WPRINTF("\n\nCancelled!");
 				gfx_con.fntsz = 8;
 				msleep(1000);
 
@@ -206,7 +206,7 @@ static int _dump_emmc_verify(sdmmc_storage_t *storage, u32 lba_curr, char *outFi
 	else
 	{
 		gfx_con.fntsz = 16;
-		EPRINTF("\nFile not found or could not be loaded.\n\nVerification failed..\n");
+		EPRINTF("\nFile not found / not loaded.\n\nFailed..\n");
 		return 1;
 	}
 }
@@ -411,7 +411,7 @@ static int _dump_emmc_part(char *sd_path, sdmmc_storage_t *storage, emmc_part_t 
 	{
 		isSmallSdCard = true;
 
-		gfx_printf("%k\nSD card free space is smaller than total backup size.%k\n", 0xFFFFBA00, 0xFFFFFFFF);
+		gfx_printf("%k\nSD space is smaller than backup size.%k\n", 0xFFFFBA00, 0xFFFFFFFF);
 
 		if (!maxSplitParts)
 		{
@@ -436,7 +436,7 @@ static int _dump_emmc_part(char *sd_path, sdmmc_storage_t *storage, emmc_part_t 
 		if (!maxSplitParts)
 		{
 			gfx_con.fntsz = 16;
-			EPRINTF("Not enough free space for Partial Backup.");
+			EPRINTF("Not enough space for Partial Backup.");
 
 			return 0;
 		}
@@ -445,7 +445,7 @@ static int _dump_emmc_part(char *sd_path, sdmmc_storage_t *storage, emmc_part_t 
 		maxSplitParts += currPartIdx;
 	}
 	else if (isSmallSdCard)
-		gfx_printf("%kPartial Backup enabled (with %d MiB parts)...%k\n\n", 0xFFFFBA00, multipartSplitSize >> 20, 0xFFFFFFFF);
+		gfx_printf("%kPartial Backup (%d MiB parts)...%k\n\n", 0xFFFFBA00, multipartSplitSize >> 20, 0xFFFFFFFF);
 
 	// Check if filesystem is FAT32 or the free space is smaller and backup in parts.
 	if (((sd_fs.fs_type != FS_EXFAT) && totalSectors > (FAT32_FILESIZE_LIMIT / NX_EMMC_BLOCKSIZE)) | isSmallSdCard)
@@ -1028,8 +1028,8 @@ static int _restore_emmc_part(char *sd_path, sdmmc_storage_t *storage, emmc_part
 		if (res)
 		{
 			gfx_con.fntsz = 16;
-			EPRINTFARGS("\nFatal error (%d) when reading from SD Card", res);
-			EPRINTF("\nYour device may be in an inoperative state!\n\nPress any key and try again now...\n");
+			EPRINTFARGS("\nFatal error SD Card: %d", res);
+			EPRINTF("\nDevice may not boot!\n\nPress any key to try again.\n");
 
 			f_close(&fp);
 			return 0;
@@ -1045,7 +1045,7 @@ static int _restore_emmc_part(char *sd_path, sdmmc_storage_t *storage, emmc_part
 				gfx_con.fntsz = 16;
 				EPRINTFARGS("\nFailed to write %d blocks @ LBA %08X\nfrom eMMC. Aborting..\n",
 					num, lba_curr);
-				EPRINTF("\nYour device may be in an inoperative state!\n\nPress any key and try again...\n");
+				EPRINTF("\nDevice may not boot!\n\nPress any key to try again.\n");
 
 				f_close(&fp);
 				return 0;

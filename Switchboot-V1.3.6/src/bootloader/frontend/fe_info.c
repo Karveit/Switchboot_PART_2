@@ -92,7 +92,7 @@ void print_fuseinfo()
 	gfx_printf("%k(Unlocked) fuse cache:\n\n%k", 0xFF00FF00, 0xFFFFFFFF);
 	gfx_hexdump(0x7000F900, (u8 *)0x7000F900, 0x2FC);
 
-	gfx_puts("\nPress POWER to dump them to SD Card.\nPress VOL to go to the menu.\n");
+	gfx_puts("\n[PWR] - Save to SD.\n[VOL] - Menu\n");
 
 	u32 btn = btn_wait();
 	if (btn & BTN_POWER)
@@ -193,7 +193,7 @@ void print_tsec_key()
 	else
 		EPRINTFARGS("ERROR %X\n", res);
 
-	gfx_puts("\n\nPress POWER to dump them to SD Card.\nPress VOL to go to the menu.\n");
+	gfx_puts("\n\n[PWR] - Save to SD.\n[VOL] - Menu\n");
 
 	u32 btn = btn_wait();
 	if (btn & BTN_POWER)

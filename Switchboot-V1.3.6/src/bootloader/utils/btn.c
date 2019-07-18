@@ -26,23 +26,22 @@ extern void screenshot();
 u32 btn_read()
 {
 	u32 res = 0;
-	if (!gpio_read(GPIO_PORT_X, GPIO_PIN_7))
-		res |= BTN_VOL_DOWN;
-	if (!gpio_read(GPIO_PORT_X, GPIO_PIN_6))
-		res |= BTN_VOL_UP;
-	if (i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4){
-		res = 0;
-		if (i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4 && !gpio_read(GPIO_PORT_X, GPIO_PIN_6)){
-		res = 0;
+		if (!(i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4) && !gpio_read(GPIO_PORT_X, GPIO_PIN_6)){
 		screenshot();
-		btn_wait();
+		msleep(1000);
 		res = 0;
-		return res;
-		}
-	}
-	if (!(i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4)){
+		goto out;
+		} 
+	
+	if (!(i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4) && gpio_read(GPIO_PORT_X, GPIO_PIN_7) && gpio_read(GPIO_PORT_X, GPIO_PIN_6))
 		res |= BTN_POWER;
-	}
+	
+
+	if (!gpio_read(GPIO_PORT_X, GPIO_PIN_7) && i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4)
+		res |= BTN_VOL_DOWN;
+	if (!gpio_read(GPIO_PORT_X, GPIO_PIN_6) && i2c_recv_byte(4, MAX77620_I2C_ADDR, 0x15) & 0x4)
+		res |= BTN_VOL_UP;
+out:	
 	return res;
 }
 

@@ -166,7 +166,7 @@ if(get_dir_only){
 		
 if (strlen(browse_dir) < 1) {
 	browse_dir[1] = '\0';
-	gfx_printf(" Nothing selected. Exiting."); msleep(2000);
+	gfx_printf("\n Nothing selected. Exiting."); msleep(2000);
 	goto out2;
 	}
 

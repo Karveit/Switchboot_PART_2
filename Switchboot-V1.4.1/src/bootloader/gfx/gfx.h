@@ -26,10 +26,13 @@
 #define WPRINTF(text) gfx_printf("%k"text"%k\n", WARN_TEXT_COL, MAIN_TEXT_COL)
 #define WPRINTFARGS(text, args...) gfx_printf("%k"text"%k\n", WARN_TEXT_COL, args, MAIN_TEXT_COL)
 
+//bg levels of solid colour. White / black shades only
 #define GREY 0x1B
-#define GREY_RGB 0xFF555555
 #define LIGHTGREY 0x30
 #define BLACK 0x00
+#define WHITE 0xFF
+
+//text RGB colours 0xFF<RRGGBB>
 #define WHITE_RGB 0xFFFFFFFF
 #define YELLOW_RGB 0xFFFFFF00
 #define GREEN_RGB 0xFF00FF00
@@ -37,15 +40,18 @@
 #define DKGREY_RGB 0xFF1B1B1B
 #define RED_RGB 0xFFFF0000
 #define BLACK_RGB 0xFF000000
+#define GREY_RGB 0xFF555555
 
+//make clean after each update of colours
 #define BG_COL BLACK
+#define BATT_BG_COL LIGHTGREY
+
 #define MAIN_TEXT_COL WHITE_RGB
 #define STATIC_TEXT_COL GREY_RGB
-#define DK_TEXT_COL BLACK_RGB
+#define INV_TEXT_COL BLACK_RGB
 #define WARN_TEXT_COL YELLOW_RGB
 #define INFO_TEXT_COL GREEN_RGB
 #define INFO_TEXT_COL_HB DKGREEN_RGB
-#define BATT_BG_COL LIGHTGREY
 #define DANGER_ERROR_TEXT_COL RED_RGB
 
 #define FB_ADDRESS 0xC0000000

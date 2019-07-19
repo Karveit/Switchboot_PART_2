@@ -25,4 +25,6 @@ void fix_battery_desync();
 void menu_autorcm();
 void flipVertically(unsigned char* pixels_buffer, const unsigned int width, const unsigned int height, const int bytes_per_pixel);
 void screenshot();
+void fix_fuel_gauge_configuration();
+void reset_pmic_fuel_gauge_charger_config();
 #endif

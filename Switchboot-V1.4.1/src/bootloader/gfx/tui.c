@@ -49,6 +49,7 @@ void tui_sbar(bool force_update)
 	max17050_get_property(MAX17050_VCELL, &battVoltCurr);
 
 	gfx_clear_partial_grey(BATT_BG_COL, 1256, 24);
+	gfx_clear_partial_grey(BG_COL, 1240, 16); // clear errors
 	gfx_printf("%K%k Battery: %d.%d%% (%d mV) - Charge:", 0xFF303030, 0xFF888888,
 		(battPercent >> 8) & 0xFF, (battPercent & 0xFF) / 26, battVoltCurr);
 
@@ -56,10 +57,10 @@ void tui_sbar(bool force_update)
 
 	if (battVoltCurr >= 0)
 		gfx_printf(" %k+%d mA%k%K\n",
-			0xFF008800, battVoltCurr / 1000, MAIN_TEXT_COL, DK_TEXT_COL);
+			0xFF008800, battVoltCurr / 1000, MAIN_TEXT_COL, INV_TEXT_COL);
 	else
 		gfx_printf(" %k-%d mA%k%K\n",
-			0xFF880000, (~battVoltCurr) / 1000, MAIN_TEXT_COL, DK_TEXT_COL);
+			0xFF880000, (~battVoltCurr) / 1000, MAIN_TEXT_COL, INV_TEXT_COL);
 	gfx_con.fntsz = prevFontSize;
 	gfx_con_setpos(cx, cy);
 }
@@ -101,9 +102,9 @@ void *tui_do_menu(menu_t *menu)
 
 	while (true)
 	{
-		gfx_con_setcol(MAIN_TEXT_COL, 1, DK_TEXT_COL);
+		gfx_con_setcol(MAIN_TEXT_COL, 1, INV_TEXT_COL);
 		gfx_con_setpos(menu->x, menu->y);
-		gfx_printf("[%s]\n\n", menu->caption);
+		gfx_printf("%s\n\n", menu->caption);
 
 		// Skip caption or seperator lines selection.
 		while (menu->ents[idx].type == MENT_CAPTION ||
@@ -134,9 +135,9 @@ void *tui_do_menu(menu_t *menu)
 		for (cnt = 0; menu->ents[cnt].type != MENT_END; cnt++)
 		{
 			if (cnt == idx)
-				gfx_con_setcol(DK_TEXT_COL, 1, MAIN_TEXT_COL);
+				gfx_con_setcol(INV_TEXT_COL, 1, MAIN_TEXT_COL);
 			else
-				gfx_con_setcol(MAIN_TEXT_COL, 1, DK_TEXT_COL);
+				gfx_con_setcol(MAIN_TEXT_COL, 1, INV_TEXT_COL);
 			if (menu->ents[cnt].type == MENT_CAPTION)
 				gfx_printf("%k %s", menu->ents[cnt].color, menu->ents[cnt].caption);
 			else if (menu->ents[cnt].type != MENT_CHGLINE)
@@ -145,7 +146,7 @@ void *tui_do_menu(menu_t *menu)
 				gfx_printf("%k...", INFO_TEXT_COL);
 			gfx_printf(" \n");
 		}
-		gfx_con_setcol(MAIN_TEXT_COL, 1, DK_TEXT_COL);
+		gfx_con_setcol(MAIN_TEXT_COL, 1, INV_TEXT_COL);
 		gfx_putc('\n');
 
 		// Print help and battery status.

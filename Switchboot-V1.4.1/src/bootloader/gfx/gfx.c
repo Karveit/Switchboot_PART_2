@@ -151,7 +151,7 @@ void gfx_con_init()
 	gfx_con.savedy = 0;
 	gfx_con.fgcol = MAIN_TEXT_COL;
 	gfx_con.fillbg = 1;
-	gfx_con.bgcol = DK_TEXT_COL;
+	gfx_con.bgcol = INV_TEXT_COL;
 	gfx_con.mute = 0;
 }
 

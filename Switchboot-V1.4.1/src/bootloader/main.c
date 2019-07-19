@@ -92,7 +92,7 @@ bool sd_mount()
 		}
 		else
 		{
-			EPRINTFARGS("\n SD card error %d.\n FAT partition missing or incorrect.\n", res);
+			EPRINTFARGS("\n SD card error %d.\n FAT partition incorrect.\n", res);
 		}
 	}
 
@@ -271,7 +271,7 @@ int launch_payload(char *path, bool update)
 		FIL fp;
 		if (f_open(&fp, path, FA_READ))
 		{
-			EPRINTFARGS("Payload file is missing!\n(%s)", path);
+			EPRINTF("Payload missing!\n");
 			sd_unmount();
 
 			return 1;
@@ -335,34 +335,9 @@ int launch_payload(char *path, bool update)
 	return 1;
 }
 
-void auto_launch_update()
-{
-	if (EMC(EMC_SCRATCH0) & EMC_HEKA_UPD)
-		EMC(EMC_SCRATCH0) &= ~EMC_HEKA_UPD;
-	else if (sd_mount())
-	{
-		if (!f_stat("bootloader/update.bin", NULL))
-			launch_payload("bootloader/update.bin", true);
-	}
-}
 
-void auto_launch_dummy_payload()
-{
-	FIL fp;
-	if (sd_mount())
-		{
-			if (f_open(&fp, "bootloader/payloads/dummy", FA_READ))
-				return;
-			else
-			{
-				f_close(&fp);
-				launch_payload("bootloader/payloads/dummy", false);
-			}
-
-		}
-	}
 	
-	int read_strap_info()
+int read_strap_info()
 	{
 	FIL fp;
 	bool read_info = false;
@@ -383,7 +358,7 @@ void auto_launch_dummy_payload()
 		char* strap_buffer = malloc(size + 1);
 		memset(strap_buffer, 0, size + 1);
 		if (size != 339) {
-			EPRINTF ("Strap info incorrect\n\n");
+			EPRINTF ("Strap info size error\n\n");
 			read_info = false;
 			goto out;
 		}
@@ -392,7 +367,7 @@ void auto_launch_dummy_payload()
 		{
 			f_close(&fp);
 			sd_unmount();
-			EPRINTF ("Strap info read fail.\n\n");
+			EPRINTF ("Strap info fail\n\n");
 			read_info = false;
 			goto out;
 		}
@@ -431,7 +406,7 @@ if (sd_mount())
 		{
 			if (launch_payload(file_sec, false))
 			{
-				EPRINTFARGS("Failed to launch payload:\n%s", file_sec);
+				EPRINTFARGS("Failed to launch payload.\n%s", file_sec);
 				free(file_sec);
 			}
 		}
@@ -500,7 +475,7 @@ void ini_list_launcher()
 
 	if (sd_mount())
 	{
-		path_sec = file_browser(NULL, NULL, "Choose a folder or INI", false);
+		path_sec = file_browser(NULL, NULL, "Choose folder / INI", false);
 		
 		u8 fr1 = 0; u8 fr2 = 0;
 		
@@ -535,7 +510,7 @@ void ini_list_launcher()
 			{
 				memset(&ments[i], 0, sizeof(ment_t));
 				menu_t menu = {
-					ments, "Launch ini configurations", 0, 0
+					ments, "Ini configurations", 0, 0
 				};
 
 				cfg_sec = (ini_sec_t *)tui_do_menu(&menu);
@@ -572,11 +547,11 @@ void ini_list_launcher()
 				}
 			}
 			else
-				EPRINTF("No extra configs found.");
+				EPRINTF("Nothing here.");
 			free(ments);
 		}
 		else
-			EPRINTF("Could not find any ini\nin bootloader/ini!");
+			EPRINTF("Nothing here.\n");
 	}
 
 	if (!cfg_sec)
@@ -586,13 +561,13 @@ void ini_list_launcher()
 	{
 		if (launch_payload(payload_path, false))
 		{
-			EPRINTF("Failed to launch payload.");
+			EPRINTF("Payload failed.");
 			free(payload_path);
 		}
 	}
 	else if (!hos_launch(cfg_sec))
 	{
-		EPRINTF("Failed to launch firmware.");
+		EPRINTF("Firmware failed.");
 		btn_wait();
 	}
 
@@ -632,7 +607,7 @@ void launch_firmware()
 			ments[4].caption = "Add stock entry to INI";
 			ments[4].handler = type3;
 			ments[5].type = MENT_HANDLER;
-			ments[5].caption = "More configs...";
+			ments[5].caption = "Browse configs...";
 			ments[5].handler = ini_list_launcher;
 			ments[6].type = MENT_CHGLINE;
 
@@ -655,7 +630,7 @@ void launch_firmware()
 			if (i < 8)
 			{
 				ments[i].type = MENT_CAPTION;
-				ments[i].caption = "No main configs found...";
+				ments[i].caption = "Nothing here.";
 				ments[i].color = WARN_TEXT_COL;
 				i++;
 			}
@@ -713,24 +688,26 @@ void launch_firmware()
 
 	if (!cfg_sec)
 	{
-		gfx_puts("\nUsing default launch configuration...\n");
-		gfx_puts("\nPress POWER to Continue.\nPress VOL to go to the menu.");
+		gfx_puts("\n Trying default configuration...\n");
+		gfx_puts("\n [PWR] Continue.\n [VOL+] Boot Stock with FuseCheck\n [VOL-] Menu.");
 
 		u32 btn = btn_wait();
-		if (!(btn & BTN_POWER))
+		if ((btn & BTN_VOL_DOWN))
 			goto out;
+		if((btn & BTN_VOL_UP))
+			reboot_normal();
 	}
 
 	if (payload_path)
 	{
 		if (launch_payload(payload_path, false))
 		{
-			EPRINTF("Failed to launch payload.");
+			EPRINTF("Payload failed.");
 			free(payload_path);
 		}
 	}
 	else if (!hos_launch(cfg_sec))
-		EPRINTF("Failed to launch firmware.");
+		EPRINTF("Firmware failed.");
 
 out:
 	sd_unmount();
@@ -815,9 +792,6 @@ skip:
 	}
 	
 	
-
-	if (!h_cfg.sept_run)
-		auto_launch_update();
 
 	u8 *BOOTLOGO = NULL;
 	char *payload_path = NULL;
@@ -962,7 +936,7 @@ skip:
 
 			}
 
-			// Add missing configuration entry.
+			// Add  configuration entry.
 			if (!configEntry)
 				create_config_entry();
 
@@ -1427,9 +1401,12 @@ void about()
 ment_t ment_options[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
+	MDEF_CAPTION("-- Boot Options --", INFO_TEXT_COL),
 	MDEF_HANDLER("Auto boot", config_autoboot),
 	MDEF_HANDLER("Boot time delay", config_bootdelay),
 	MDEF_HANDLER("Auto NoGC", config_nogc),
+	MDEF_CHGLINE(),
+	MDEF_CAPTION("-- Power Off / Display --", INFO_TEXT_COL),
 	MDEF_HANDLER("Auto HOS power off", config_auto_hos_poweroff),
 	MDEF_HANDLER("Backlight", config_backlight),
 	MDEF_END()
@@ -1440,16 +1417,16 @@ menu_t menu_options = { ment_options, "Launch Options", 0, 0 };
 ment_t ment_cinfo[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("---- SoC Info ----", INFO_TEXT_COL),
+	MDEF_CAPTION("-- SoC Info --", INFO_TEXT_COL),
 	MDEF_HANDLER("Ipatches & bootrom info", bootrom_ipatches_info),
-	MDEF_HANDLER("Print fuse info", print_fuseinfo),
-	MDEF_HANDLER("Print kfuse info", print_kfuseinfo),
-	MDEF_HANDLER("Print TSEC keys", print_tsec_key),
+	MDEF_HANDLER("Save fuse info", print_fuseinfo),
+	MDEF_HANDLER("Save kfuse info", print_kfuseinfo),
+	MDEF_HANDLER("Save TSEC keys", print_tsec_key),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Info --", INFO_TEXT_COL),
-	MDEF_HANDLER("Print eMMC info", print_mmc_info),
-	MDEF_HANDLER("Print SD Card info", print_sdcard_info),
-	MDEF_HANDLER("Print battery info", print_battery_info),
+	MDEF_HANDLER("Show eMMC info", print_mmc_info),
+	MDEF_HANDLER("Show SD Card info", print_sdcard_info),
+	MDEF_HANDLER("Show battery info", print_battery_info),
 	MDEF_END()
 };
 
@@ -1458,50 +1435,49 @@ menu_t menu_cinfo = { ment_cinfo, "Console Info", 0, 0 };
 ment_t ment_restore[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- Safety Backup --", INFO_TEXT_COL),
-	MDEF_HANDLER("Restore BOOT0/1 + Prodinfo (safe folder)", restore_emmc_quick),
-	MDEF_HANDLER("Restore Prodinfo ONLY (safe folder) folder", restore_emmc_quick_prodinfo),
+	MDEF_CAPTION("-- Minimal --", INFO_TEXT_COL),
+	MDEF_HANDLER("BOOT0/1 + Prodinfo (safe folder)", restore_emmc_quick),
+	MDEF_HANDLER("Prodinfo ONLY (safe folder) folder", restore_emmc_quick_prodinfo),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Full --", INFO_TEXT_COL),
-	MDEF_HANDLER("Restore eMMC BOOT0/1", restore_emmc_boot),
-	MDEF_HANDLER("Restore eMMC RAW GPP (exFAT only)", restore_emmc_rawnand),
-	MDEF_HANDLER("Restore eMMC RAW GPP", restore_emmc_rawnand),
+	MDEF_HANDLER("eMMC BOOT0/1", restore_emmc_boot),
+	MDEF_HANDLER("eMMC RAW GPP", restore_emmc_rawnand),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- GPP Partitions --", INFO_TEXT_COL),
-	MDEF_HANDLER("Restore GPP partitions", restore_emmc_gpp_parts),
+	MDEF_CAPTION("-- Partitions --", INFO_TEXT_COL),
+	MDEF_HANDLER("eMMC partitions", restore_emmc_gpp_parts),
+	MDEF_CHGLINE(),
+	MDEF_CAPTION("-- Dangerous --", DANGER_ERROR_TEXT_COL),
+	MDEF_HANDLER("BOOT0/1 without size check", restore_emmc_boot_noszchk),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Misc --", INFO_TEXT_COL),
-	MDEF_HANDLER("Restore SXOS license.dat", restore_license_dat),
-	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- Dangerous --", INFO_TEXT_COL),
-	MDEF_HANDLER("Restore BOOT0/1 without size check", restore_emmc_boot_noszchk),
+	MDEF_HANDLER("SXOS license.dat", restore_license_dat),
 	MDEF_END()
 };
 menu_t menu_restore = {
 	ment_restore,
-	"Restore Options", 0, 0
+	"Choose Restore Option", 0, 0
 };
 
 ment_t ment_backup[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- Safety Backup --", INFO_TEXT_COL),
-	MDEF_HANDLER("Backup BOOT0/1 + Prodinfo (safe folder)", dump_emmc_quick),
+	MDEF_CAPTION("-- Minimal --", INFO_TEXT_COL),
+	MDEF_HANDLER("BOOT0/1 + Prodinfo (safe folder)", dump_emmc_quick),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Full --", INFO_TEXT_COL),
-	MDEF_HANDLER("Backup eMMC BOOT0/1", dump_emmc_boot),
-	MDEF_HANDLER("Backup eMMC RAW GPP", dump_emmc_rawnand),
+	MDEF_HANDLER("eMMC BOOT0/1", dump_emmc_boot),
+	MDEF_HANDLER("eMMC as Rawnand", dump_emmc_rawnand),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- GPP Partitions --", INFO_TEXT_COL),
+	MDEF_CAPTION("-- Partitions --", INFO_TEXT_COL),
 	MDEF_CHGLINE(),
-	MDEF_HANDLER("Backup eMMC SYS", dump_emmc_system),
-	MDEF_HANDLER("Backup eMMC USER", dump_emmc_user),
+	MDEF_HANDLER("eMMC SYS", dump_emmc_system),
+	MDEF_HANDLER("eMMC USER", dump_emmc_user),
 	MDEF_END()
 };
 
 menu_t menu_backup = {
 	ment_backup,
-	"Backup Options", 0, 0
+	"Choose Backup Option", 0, 0
 };
 
 ment_t ment_sxos[] = {
@@ -1510,9 +1486,9 @@ ment_t ment_sxos[] = {
 	MDEF_CHGLINE(),
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
-	MDEF_HANDLER("Basic MultiNAND setup", emunand_1),
-	MDEF_HANDLER("Activate selected MultiNAND slot", emunand_2),
-	MDEF_HANDLER("Deactivate current Multinand emuNAND", emunand_3),
+	MDEF_HANDLER("MultiNAND setup", emunand_1),
+	MDEF_HANDLER("Activate MultiNAND slot", emunand_2),
+	MDEF_HANDLER("Deactivate Multinand emuNAND", emunand_3),
 	MDEF_HANDLER("View slot data", emunand_4),
 	MDEF_CHGLINE(),
 	MDEF_HANDLER("Restore SXOS licence.dat", restore_license_dat),
@@ -1535,11 +1511,11 @@ ment_t ment_tools[] = {
 	MDEF_HANDLER("Verification options", config_verification),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-------- Misc --------", INFO_TEXT_COL),
-	MDEF_HANDLER("Dump package1/2", dump_packages12),
+	//MDEF_HANDLER("Dump package1/2", dump_packages12),
 	MDEF_HANDLER("Fix archive bit (except Nintendo)", fix_sd_all_attr),
 	MDEF_HANDLER("Fix archive bit (Nintendo only)", fix_sd_nin_attr),
-	//MDEF_HANDLER("Fix fuel gauge configuration", fix_fuel_gauge_configuration),
-	//MDEF_HANDLER("Reset all battery cfg", reset_pmic_fuel_gauge_charger_config),
+	MDEF_HANDLER("Fix fuel gauge configuration", fix_fuel_gauge_configuration),
+	MDEF_HANDLER("Reset all battery cfg", reset_pmic_fuel_gauge_charger_config),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-------- Other -------", WARN_TEXT_COL),
 	MDEF_HANDLER("AutoRCM", menu_autorcm),
@@ -1566,7 +1542,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "Switchboot v1.4.0 - Hekate CTCaer v5.0.1", 0, 0 };
+menu_t menu_top = { ment_top, "Switchboot v1.4.1 - Hekate CTCaer v5.0.1", 0, 0 };
 
 #define IPL_STACK_TOP  0x90010000
 #define IPL_HEAP_START 0x90020000

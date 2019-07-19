@@ -30,6 +30,8 @@
 #include "../libs/fatfs/ff.h"
 #include "../mem/heap.h"
 #include "../power/max7762x.h"
+#include "../power/bq24193.h"
+#include "../power/max17050.h"
 #include "../sec/se.h"
 #include "../storage/nx_emmc.h"
 #include "../storage/sdmmc.h"
@@ -525,16 +527,31 @@ void flipVertically(unsigned char* pixels_buffer, const unsigned int width, cons
 
 void screenshot()
 {
-	if (!screenshot_count){
-		screenshot_count = 1;
-	}
+	
+	char *screenshotname = malloc(32);
+	char *i_chr = malloc(3);
+	
+
 	if (sd_mount()){
-	char screenshotname[24];
+		f_mkdir ("Screenshots");
+		memcpy (screenshotname+0, "Screenshots/screenshot", 23);
+		u8 sc_pathln = strlen(screenshotname);
+		u8 i = 1;
+		while (i < 99){
+			itoa (i, i_chr, 10);
+			memcpy (screenshotname+sc_pathln, i_chr, strlen(i_chr)+1);
+			memcpy (screenshotname+strlen(screenshotname), ".bmp", 5);
+			if(!f_stat(screenshotname, NULL)) ++i;
+			else break;
+			
+		}
+	screenshot_count = i+1;
+	
 			
 	free(gfx_ctxt.fb);
     s32 width = 720;
     s32 height = 1280;
-    u16 bitcount = 32;//<- 24-bit bitmap
+    u16 bitcount = 32;
 	int width_in_bytes = (width * 4);
 
     u32 imagesize = width_in_bytes * height;
@@ -559,26 +576,17 @@ void screenshot()
     memcpy(buff, header, 54);
 	flipVertically ((unsigned char*)gfx_ctxt.fb, width, height , 4);
     memcpy(buff + 54, gfx_ctxt.fb, imagesize);
-	if (screenshot_count < 10){
-	memcpy(screenshotname, "Screenshot", 10);
-	itoa (screenshot_count, &screenshotname[10], 10);
-	memcpy(screenshotname + 11, ".bmp", 5);
-	} else if (screenshot_count > 10){
-	memcpy(screenshotname, "Screenshot", 10);
-	itoa (screenshot_count, &screenshotname[10], 10);
-	memcpy(screenshotname + 12, ".bmp", 5);
-	} else if (screenshot_count > 99) screenshot_count = 0;
+
+if (screenshot_count > 99) screenshot_count = 0;
 		if (!sd_save_to_file(buff, imagesize + 54, screenshotname)){
 		flipVertically ((unsigned char*)gfx_ctxt.fb, width, height , 4);
 		free(buff);
 		free(gfx_ctxt.fb);
+		gfx_clear_partial_grey(BG_COL, 0, 16);
 		gfx_con_setpos(0, 0);
-		gfx_printf("                                             ");
-		gfx_con_setpos(0, 0);
-		gfx_printf("Screenshot saved as %s", screenshotname);
+		gfx_printf("Saved as %s", screenshotname);
 		msleep(1500);
-		gfx_con_setpos(0, 0);
-		gfx_printf("                                             ");
+		gfx_clear_partial_grey(BG_COL, 0, 16);
 		++screenshot_count;
 	}
 	
@@ -586,7 +594,7 @@ void screenshot()
     return;
 }
 
-/* void fix_fuel_gauge_configuration()
+void fix_fuel_gauge_configuration()
 {
 	gfx_clear_partial_grey(BG_COL, 0, 1256);
 	gfx_con_setpos(0, 0);
@@ -635,9 +643,9 @@ void screenshot()
 
 	msleep(500);
 	btn_wait();
-} */
+}
 
-/*void reset_pmic_fuel_gauge_charger_config()
+void reset_pmic_fuel_gauge_charger_config()
 {
 	int avgCurrent;
 
@@ -683,6 +691,6 @@ void screenshot()
 		msleep(500);
 		btn_wait();
 	}
-}*/
+}
 
 #pragma GCC pop_options

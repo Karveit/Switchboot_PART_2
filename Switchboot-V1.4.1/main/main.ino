@@ -19,13 +19,13 @@
 // uncomment your chip and comment the others. Will build!!!
 
 #define DISABLE_STRAP_INFO_TXT 1 //if building into modchip for internal use, uncomment this!
-//#define TRINKET
+#define TRINKET
 //#define TRINKETMETHOD3
 //#define TRINKETLEGACY3
 //#define REBUG
 //#define GEMMA
 //#define ITSYBITSY
-#define FEATHER
+//#define FEATHER
 //#define RCMX86_INTERNAL
 //#define EXEN_MINI **currently incomplete
 //#define RCMX86

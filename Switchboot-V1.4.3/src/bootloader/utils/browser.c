@@ -236,7 +236,7 @@ out2:
 		{
 		dst_size = f_size(&fdst);
 		src_size = f_size(&fsrc);
-		if (dst_size == src_size) {
+		if (dst_size != src_size) {
 			f_close(&fdst);
 			f_unlink(dst_file);
 			}

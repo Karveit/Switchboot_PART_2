@@ -1,0 +1,19 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "arm-none-eabi-gcc build active file",
+            "command": "C:\\devkitPro\\devkitARM\\bin\\arm-none-eabi-gcc",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+            ],
+            "options": {
+                "cwd": "C:\\devkitPro\\devkitARM\\bin"
+            }
+        }
+    ],
+    "version": "2.0.0"
+}

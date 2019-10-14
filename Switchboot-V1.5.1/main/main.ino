@@ -51,6 +51,7 @@ FlashStorage(EEPROM_AUTOINCREASE_PAYLOAD, uint32_t);
 FlashStorage(EEPROM_DOTSTAR_BRIGHTNESS, uint32_t);
 FlashStorage(EEPROM_CHIP_DISABLED, bool);
 FlashStorage(EEPROM_PAYLOAD_INDICATION, uint32_t);
+FlashStorage(EEPROM_WAKEUP_REASON, uint32_t);
 
 uint32_t WRITTEN_PAYLOAD_NUMBER = EEPROM_PAYLOAD_NUMBER.read();
 uint32_t WRITTEN_MODE_NUMBER = EEPROM_MODE_NUMBER.read();
@@ -62,6 +63,8 @@ uint32_t STORED_AUTOINCREASE_PAYLOAD_FLAG = EEPROM_AUTOINCREASE_PAYLOAD.read();
 uint32_t NEW_DOTSTAR_BRIGHTNESS = EEPROM_DOTSTAR_BRIGHTNESS.read();
 bool chipdisabled = EEPROM_CHIP_DISABLED.read();
 uint32_t payload_indication_disabled = EEPROM_PAYLOAD_INDICATION.read();
+uint32_t reboot_reason = EEPROM_WAKEUP_REASON.read();
+
 //non eeprom globals
 uint32_t ITEM;
 uint32_t AMOUNT_OF_PAYLOADS;
@@ -142,6 +145,7 @@ void run_once()
     EEPROM_JOYCON_CONTROL_STRAP.write(DEFAULT_JOYCON);
     EEPROM_VOL_CONTROL_STRAP.write(DEFAULT_VOLUME);
     EEPROM_PAYLOAD_INDICATION.write(0);
+    EEPROM_WAKEUP_REASON.write(0);
     
     STORED_AUTOINCREASE_PAYLOAD_FLAG = 0;
     CHANGE_STORED_AUTOINCREASE_PAYLOAD_FLAG = 0;
@@ -173,6 +177,11 @@ void run_once()
 
 
 void wakeup() {
+  SCB->AIRCR = ((0x5FA << SCB_AIRCR_VECTKEY_Pos) | SCB_AIRCR_SYSRESETREQ_Msk); //full software reset
+}
+
+void wakeup_reason() {
+  EEPROM_WAKEUP_REASON.write(1);
   SCB->AIRCR = ((0x5FA << SCB_AIRCR_VECTKEY_Pos) | SCB_AIRCR_SYSRESETREQ_Msk); //full software reset
 }
 

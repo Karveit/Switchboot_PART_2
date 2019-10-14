@@ -46,7 +46,7 @@ extern hekate_config h_cfg;
 
 extern bool sd_mount();
 extern void sd_unmount();
-extern void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
+extern int emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
 
 static bool noszchk;
 #pragma GCC push_options
@@ -736,30 +736,6 @@ static void backup_restore_emmc_selected(const u8 action, const u8 selection, u8
 			goto out;
 	}
 	
-	if(unsafe == 1)
-	{
-		gfx_printf("%kVERY DANGEROUS! Checks disabled!\n", WARN_TEXT_COL);
-		gfx_printf("Press [PWR] 5 times.\n%k", MAIN_TEXT_COL);
-
-		gfx_puts("[VOL] Menu\n\n");
-		gfx_con_getpos(&gfx_con.savedx, &gfx_con.savedy);
-		u8 i = 5;
-		while(i>0){
-		gfx_con_setpos(gfx_con.savedx, gfx_con.savedy);
-		gfx_printf("%k%d. This could permanently corrupt EMMC.\n", WARN_TEXT_COL, i);
-		u32 btn = btn_wait();
-		if (!(btn & BTN_POWER))
-			goto out;
-		else --i;
-		}
-		
-		
-		
-
-		if (!sd_mount())
-			goto out;	
-	}
-	
 	if (!sdmmc_storage_init_mmc(&storage, &sdmmc, SDMMC_4, SDMMC_BUS_WIDTH_8, 4))
 		{
 			EPRINTF("Failed init eMMC.");
@@ -782,7 +758,10 @@ static void backup_restore_emmc_selected(const u8 action, const u8 selection, u8
 			gfx_printf("%k%s%k\n", MAIN_TEXT_COL,
 				part->name, MAIN_TEXT_COL);
 
-			if (unsafe == 1) {emmcsn_path_impl(sdPath, "<browser>", part->name, &storage); noszchk = true;}
+			if (unsafe == 1) {
+				if (!emmcsn_path_impl(sdPath, "<browser>", part->name, &storage)) noszchk = true;
+				else goto out;
+			}
 			if (unsafe == 0) emmcsn_path_impl(sdPath, "", part->name, &storage);
 			if (action == 1)res = _dump_emmc_part(sdPath, &storage, part);
 			if (action == 2)res = _restore_emmc_part(sdPath, &storage, part, false);
@@ -808,7 +787,10 @@ static void backup_restore_emmc_selected(const u8 action, const u8 selection, u8
 				gfx_printf("%k%s%k\n", MAIN_TEXT_COL,
 					rawPart.name, MAIN_TEXT_COL);
 
-				if (unsafe == 1) {emmcsn_path_impl(sdPath, "<browser>", rawPart.name, &storage); noszchk = true;}
+				if (unsafe == 1) {
+					if (!emmcsn_path_impl(sdPath, "<browser>", rawPart.name, &storage)) noszchk = true;
+					else goto out;
+				}
 				if (unsafe == 0) emmcsn_path_impl(sdPath, "", rawPart.name, &storage);
 				if (action == 1) res = _dump_emmc_part(sdPath, &storage, &rawPart);
 				if (action == 2) res = _restore_emmc_part(sdPath, &storage, &rawPart, true);
@@ -843,7 +825,10 @@ static void backup_restore_emmc_selected(const u8 action, const u8 selection, u8
 				gfx_printf("%k%s%k\n", MAIN_TEXT_COL,
 						partitionPart.name, INFO_TEXT_COL);
 				if (unsafe == 0) emmcsn_path_impl(sdPath, "", partitionPart.name, &storage);
-				if (unsafe == 1) {emmcsn_path_impl(sdPath, "<browser>", partitionPart.name, &storage); noszchk = true;}
+				if (unsafe == 1) {
+					if (!emmcsn_path_impl(sdPath, "<browser>", partitionPart.name, &storage)) noszchk = true;
+					else goto out;
+				}
 				if (unsafe == 2) emmcsn_path_impl(sdPath, "/safe", partitionPart.name, &storage);
 				if (action == 1 || action == 3) res = _dump_emmc_part(sdPath, &storage, &partitionPart);
 				if (action == 2 || action == 4) res = _restore_emmc_part(sdPath, &storage, &partitionPart, false);

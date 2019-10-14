@@ -43,6 +43,7 @@ void set_default_configuration()
 	h_cfg.sbar_time_keeping = 0;
 	h_cfg.backlight = 100;
 	h_cfg.autohosoff = 0;
+	h_cfg.usbporoff = 0;
 	h_cfg.autonogc = 1;
 	h_cfg.brand = NULL;
 	h_cfg.tagline = NULL;
@@ -74,6 +75,7 @@ int create_config_entry()
 		{
 			f_mkdir("bootloader");
 			f_mkdir("bootloader/ini");
+			f_mkdir("bootloader/fusee");
 			f_mkdir("bootloader/payloads");
 			f_mkdir("bootloader/sys");
 		}
@@ -105,6 +107,9 @@ int create_config_entry()
 	f_puts(lbuf, &fp);
 	f_puts("\nautohosoff=", &fp);
 	itoa(h_cfg.autohosoff, lbuf, 10);
+	f_puts(lbuf, &fp);
+	f_puts("\nusbporoff=", &fp);
+	itoa(h_cfg.usbporoff, lbuf, 10);
 	f_puts(lbuf, &fp);
 	f_puts("\nautonogc=", &fp);
 	itoa(h_cfg.autonogc, lbuf, 10);
@@ -615,6 +620,64 @@ void config_auto_hos_poweroff()
 	free(hp_values);
 
 	if (temp_autohosoff == NULL)
+		return;
+	btn_wait();
+}
+
+ void config_usb_poweronreset()
+{
+	gfx_clear_grey(BG_COL);
+	gfx_con_setpos(0, 0);
+
+	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * 6);
+	u32 *hp_values = (u32 *)malloc(sizeof(u32) * 3);
+	FIL fp;
+	
+	for (u32 j = 0; j < 3; j++)
+	{
+		hp_values[j] = j;
+		ments[j + 2].type = MENT_DATA;
+		ments[j + 2].data = &hp_values[j];
+	}
+
+	ments[0].type = MENT_BACK;
+	ments[0].caption = "Back";
+
+	ments[1].type = MENT_CHGLINE;
+
+	if (h_cfg.usbporoff == 1)
+	{
+		ments[2].caption = " Disable";
+		ments[3].caption = "*Enable";
+	}
+	else
+	{
+		ments[2].caption = "*Disable";
+		ments[3].caption = " Enable";
+	}
+
+	memset(&ments[4], 0, sizeof(ment_t));
+	menu_t menu = {ments, "Power off on USB disconnect", 0, 0};
+
+	u32 *temp_usbporoff = (u32 *)tui_do_menu(&menu);
+	if (temp_usbporoff != NULL)
+	{
+		h_cfg.usbporoff = *(u32 *)temp_usbporoff;
+		sd_mount();
+		if (h_cfg.usbporoff == 1) 
+		{
+			f_open(&fp, "bootloader/fusee/usb_pwr_off__enabled", FA_WRITE | FA_CREATE_ALWAYS);
+			f_close(&fp);
+		}
+		else f_unlink("bootloader/fusee/usb_pwr_off__enabled");
+		
+		_save_config();
+	}
+
+	free(ments);
+	free(hp_values);
+
+	if (temp_usbporoff == NULL)
 		return;
 	btn_wait();
 }

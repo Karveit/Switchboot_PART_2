@@ -28,6 +28,7 @@ typedef struct _hekate_config
 	u32 verification;
 	u32 backlight;
 	u32 autohosoff;
+	u32 usbporoff;
 	u32 autonogc;
 	char *brand;
 	char *tagline;
@@ -53,6 +54,7 @@ void config_bootdelay();
 void config_verification();
 void config_backlight();
 void config_auto_hos_poweroff();
+void config_usb_poweronreset();
 void config_nogc();
 
 #endif /* _CONFIG_H_ */

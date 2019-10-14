@@ -135,7 +135,16 @@ void send_switchboot(const byte *payload)
   usbBufferedWrite(intermezzo, INTERMEZZO_SIZE);
   usbBufferedWrite(zeros, 0xFA4);
 
-  usbBufferedWrite(SWPART1, 102220);
+  usbBufferedWrite(SWPART1, 102272);
+
+if (reboot_reason == 1)
+{
+  EEPROM_WAKEUP_REASON.write(0);
+  usbBufferedWrite(USB_POR_OFF_ENABLED,37);
+}
+else usbBufferedWrite(USB_POR_OFF_DISABLED,37);
+
+usbBufferedWrite(AFTER_USB_POR,491);
 
 #ifdef DISABLE_STRAP_INFO_TXT
   usbBufferedWrite(UNUSED_FILENAME, 32);
@@ -145,7 +154,7 @@ void send_switchboot(const byte *payload)
   usbBufferedWrite(SWPART2, 524);
   ////////////////////////////////////////////////
   usbBufferedWrite(payload, 12);
-  usbBufferedWrite(SWPART3, 1144);
+  usbBufferedWrite(SWPART3, 1156);
   usbBufferedWrite(OVERRIDE1, 34); usbBufferedWrite(PAYLOADBIN, 11);
   usbBufferedWrite(swnewline, 2);
   usbBufferedWrite(OVERRIDE2, 33); usbBufferedWrite(payload, 12);
@@ -200,7 +209,7 @@ void send_switchboot(const byte *payload)
   usbBufferedWrite(swnewline, 2);
   usbBufferedWrite(BOARDNAME, 45);
   usbBufferedWrite(swnewline, 2);
-  usbBufferedWrite(SWPART4, 20582);
+  usbBufferedWrite(SWPART4, 20578);
   usbFlushBuffer();
 }
 
@@ -341,6 +350,7 @@ void isfitted() {
 }
 
 extern void wakeup();
+extern void wakeup_reason();
 
 void sleep(int errorCode) {
 #ifdef ONBOARD_LED
@@ -358,7 +368,7 @@ void sleep(int errorCode) {
 #endif
 #endif
 #ifdef USB_LOW_RESET
-  if (USB_STRAP_TEST == 1) attachInterrupt(USB_LOW_RESET, wakeup, FALLING);
+  if (USB_STRAP_TEST == 1) attachInterrupt(USB_LOW_RESET, wakeup_reason, FALLING);
 #endif
 #ifdef JOYCON_STRAP_PIN
   if (!JOYCON_STRAP_TEST) {

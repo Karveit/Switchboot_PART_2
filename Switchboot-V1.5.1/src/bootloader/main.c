@@ -151,7 +151,7 @@ int sd_save_to_file(void *buf, u32 size, const char *filename)
 	return 0;
 }
 
-void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage)
+int emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage)
 {
 	sdmmc_storage_t storage2;
 	sdmmc_t sdmmc;
@@ -186,6 +186,21 @@ if(!strcmp(sub_dir, "<browser>"))
 	if(!file_sec) goto out;
 	
 	memcpy(path+0, file_sec, strlen(file_sec)+1);
+	
+	gfx_printf("%k\nVERY DANGEROUS! Checks disabled!\n", WARN_TEXT_COL);
+		gfx_printf("Press [PWR] 5 times.\n%k", MAIN_TEXT_COL);
+
+		gfx_puts("[VOL] Menu\n\n");
+		gfx_con_getpos(&gfx_con.savedx, &gfx_con.savedy);
+		u8 i = 5;
+		while(i>0){
+		gfx_con_setpos(gfx_con.savedx, gfx_con.savedy);
+		gfx_printf("%k%d. This could permanently corrupt EMMC.\n", WARN_TEXT_COL, i);
+		u32 btn = btn_wait();
+		if (!(btn & BTN_POWER))
+			return 1;
+		else --i;
+		}
 	goto out;
 }
 
@@ -210,12 +225,14 @@ else
 	
 	if (sub_dir_len){
 	f_mkdir(path);}
+	
 	memcpy(path + strlen(path), "/", 2);
 	memcpy(path + strlen(path), filename, filename_len + 1);
 
 out:
 	if (init_done)
 		sdmmc_storage_end(&storage2);
+	return 0;
 }
 
 void check_power_off_from_hos()
@@ -240,6 +257,18 @@ void check_power_off_from_hos()
 		}
 		power_off();
 	}
+}
+
+void setup_usb_poweroff()
+{	
+	if (sd_mount())
+	{
+		if (!f_stat("bootloader/fusee/usb_pwr_off_disabled", NULL))
+		{
+			sd_unmount();
+			power_off();
+		}
+	}	
 }
 
 // This is a safe and unused DRAM region for our payloads.
@@ -405,9 +434,9 @@ int read_strap_info()
 	}
 out:
 sd_unmount();
-if (read_info){	
-	return 1;
-	} else return 0;
+if (read_info) return 1;
+
+return 0;
 	}
 
 void launch_tools(u8 type)
@@ -888,6 +917,8 @@ skip:
 								h_cfg.backlight = atoi(kv->val);
 							else if (!strcmp("autohosoff", kv->key))
 								h_cfg.autohosoff = atoi(kv->val);
+							else if (!strcmp("usbporoff", kv->key))
+								h_cfg.usbporoff = atoi(kv->val);
 							else if (!strcmp("autonogc", kv->key))
 								h_cfg.autonogc = atoi(kv->val);
 							else if (!strcmp("brand", kv->key))
@@ -936,6 +967,9 @@ skip:
 
 			if (h_cfg.autohosoff && !(b_cfg.boot_cfg & BOOT_CFG_AUTOBOOT_EN))
 				check_power_off_from_hos();
+			
+			if (h_cfg.usbporoff)
+				setup_usb_poweroff();
 
 			if (h_cfg.autoboot_list)
 			{
@@ -1454,6 +1488,7 @@ ment_t ment_options[] = {
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Power Off / Display --", INFO_TEXT_COL),
 	MDEF_HANDLER("Prevent reboot after power-off", config_auto_hos_poweroff),
+	MDEF_HANDLER("Power off after USB disconnect", config_usb_poweronreset),
 	MDEF_HANDLER("LCD Backlight", config_backlight),
 	MDEF_END()
 };
@@ -1632,7 +1667,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "Switchboot v1.5.0 - Hekate CTCaer v5.0.2", 0, 0 };
+menu_t menu_top = { ment_top, "Switchboot v1.5.1 - Hekate CTCaer v5.0.2", 0, 0 };
 
 #define IPL_STACK_TOP  0x90010000
 #define IPL_HEAP_START 0x90020000
